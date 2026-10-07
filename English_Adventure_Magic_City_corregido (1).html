@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>English Adventure: The Magic City</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:linear-gradient(135deg,#eef5ff,#f8efff);color:#26324a}
+.app{max-width:1050px;margin:auto;padding:22px}
+.card{background:#fff;border-radius:24px;box-shadow:0 10px 30px rgba(45,55,90,.12);padding:28px}
+h1,h2,h3{margin-top:0}
+.hidden{display:none!important}
+.start{text-align:center;padding:45px 25px}
+.logo{font-size:64px;margin-bottom:8px}
+.start h1{font-size:38px;margin-bottom:8px}
+.start p{font-size:18px;line-height:1.55}
+.rules{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;text-align:left;margin:25px auto;max-width:700px}
+.rule{padding:15px;border-radius:16px;background:#f5f7ff}
+button{border:0;border-radius:14px;padding:13px 19px;font-size:16px;font-weight:700;cursor:pointer;transition:.2s}
+button:hover{transform:translateY(-2px)}
+.primary{background:#5d67e8;color:#fff}
+.secondary{background:#edf0ff;color:#4650bd}
+.option{display:block;width:100%;text-align:left;margin:10px 0;background:#f5f6fb;color:#29334a;border:2px solid transparent}
+.option:hover{border-color:#8790ee}
+.option.selected{border-color:#5d67e8}
+.option.correct{background:#dff7e8;border-color:#38a169}
+.option.wrong{background:#ffe1e1;border-color:#e05a5a}
+.top{display:flex;justify-content:space-between;gap:15px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+.stats{display:flex;gap:10px;flex-wrap:wrap}
+.badge{background:#f0f2ff;border-radius:14px;padding:10px 14px;font-weight:700}
+.progress{height:14px;background:#e8eaf3;border-radius:20px;overflow:hidden;margin:10px 0 25px}
+.bar{height:100%;width:0;background:linear-gradient(90deg,#5d67e8,#a65de8);transition:.4s}
+.level-title{text-align:center}
+.place{font-size:48px}
+.question{font-size:22px;line-height:1.45;text-align:center;margin:20px 0}
+.instruction{text-align:center;color:#59637a}
+.answer-area{max-width:720px;margin:auto}
+.feedback{min-height:54px;padding:14px 16px;border-radius:14px;margin:18px 0;font-weight:700;line-height:1.45}
+.feedback.ok{background:#e4f8eb;color:#22734a}
+.feedback.no{background:#fff0f0;color:#a43c3c}
+.feedback.hint{background:#fff8df;color:#806500}
+.wildcards{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:18px 0}
+.wildcard{background:#fff2b8;color:#735900;border:2px solid #e5c64f}
+.wildcard.used{opacity:.45;cursor:not-allowed;text-decoration:line-through;transform:none}
+.textinput{width:100%;padding:15px;border:2px solid #d8dbea;border-radius:14px;font-size:18px;margin:10px 0}
+.wordbank{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;margin:15px 0}
+.word{background:#edf0ff;color:#4a53bd}
+.selected-words{min-height:55px;border:2px dashed #bbc0db;border-radius:14px;padding:12px;text-align:center;margin:12px 0;color:#687087}
+.next{text-align:center;margin-top:20px}
+.avatar{font-size:30px}
+.small{font-size:14px;color:#6b748a}
+.levels{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:20px 0}
+.level{padding:10px;border-radius:12px;background:#eef0f7;text-align:center;font-weight:700}
+.level.done{background:#dff7e8;color:#23724b}
+.level.current{background:#5d67e8;color:#fff}
+.level.locked{opacity:.5}
+.final{text-align:center}
+.final .trophy{font-size:80px}
+@media(max-width:700px){.rules{grid-template-columns:1fr}.levels{grid-template-columns:repeat(2,1fr)}.start h1{font-size:30px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <section id="start" class="card start">
+    <div class="logo">🗺️✨</div>
+    <h1>English Adventure: The Magic City</h1>
+    <p>¡Bienvenido/a a una aventura para aprender inglés!<br>
+    Completa los 10 niveles y consigue las 10 insignias.</p>
+    <div class="rules">
+      <div class="rule">🎯 <b>10 niveles</b><br>Completa cada reto para avanzar.</div>
+      <div class="rule">⭐ <b>10 puntos</b><br>Cada nivel vale 10 puntos.</div>
+      <div class="rule">🃏 <b>Pista</b><br>Te ayuda sin darte directamente la respuesta.</div>
+      <div class="rule">✂️ <b>Elimina una</b><br>Quita una opción incorrecta o da una ayuda especial.</div>
+      <div class="rule">🔁 <b>¿Te equivocaste?</b><br>No pierdes puntos. Puedes intentarlo otra vez.</div>
+      <div class="rule">🏆 <b>Meta</b><br>¡Consigue hasta 100 puntos!</div>
+    </div>
+    <button class="primary" onclick="startGame()">🚀 Comenzar aventura</button>
+  </section>
+
+  <section id="game" class="card hidden">
+    <div class="top">
+      <div><span class="avatar">🧑‍🎓</span> <b>English Adventure</b></div>
+      <div class="stats">
+        <div class="badge">⭐ Puntos: <span id="score">0</span>/100</div>
+        <div class="badge">🏅 Nivel: <span id="levelNum">1</span>/10</div>
+      </div>
+    </div>
+
+    <div class="progress"><div class="bar" id="bar"></div></div>
+    <div class="levels" id="levels"></div>
+
+    <div class="level-title">
+      <div class="place" id="placeEmoji">🏠</div>
+      <h2 id="levelTitle">Nivel 1: My House</h2>
+      <p class="small" id="skill"></p>
+    </div>
+
+    <div class="answer-area">
+      <div class="question" id="question"></div>
+      <div id="task"></div>
+
+      <div class="wildcards">
+        <button class="wildcard" id="hintBtn" onclick="useHint()">🃏 Comodín 1: Pista</button>
+        <button class="wildcard" id="removeBtn" onclick="useRemove()">✂️ Comodín 2: Elimina una</button>
+      </div>
+
+      <div id="feedback" class="feedback hidden"></div>
+      <div class="next hidden" id="nextArea">
+        <button class="primary" onclick="nextLevel()">➡️ Siguiente nivel</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="finish" class="card final hidden">
+    <div class="trophy">🏆</div>
+    <h1>¡Aventura completada!</h1>
+    <p id="finalMessage"></p>
+    <p><b>Tu puntuación:</b> <span id="finalScore"></span>/100</p>
+    <button class="primary" onclick="restart()">🔄 Jugar de nuevo</button>
+  </section>
+</div>
+
+<script>
+const levels = [
+ {emoji:"🏠", title:"My House", skill:"Habilidad: Reading", type:"mc",
+  q:"Which word means “casa”?", opts:["House","School","Park","Book"], ans:0,
+  hint:"Piensa en el lugar donde vives.", removeHint:"Se ha eliminado una opción incorrecta."},
+ {emoji:"🏫", title:"School", skill:"Habilidad: Listening", type:"mc",
+  q:"Escucha/lee: “Open your book.” What should you do?", opts:["Abrir el libro","Cerrar el libro","Salir del salón","Guardar el libro"], ans:0,
+  hint:"La palabra “open” significa abrir.", removeHint:"Se ha eliminado una opción incorrecta."},
+ {emoji:"🛒", title:"Supermarket", skill:"Habilidad: Reading", type:"mc",
+  q:"Complete: “I like ___.”", opts:["apples","school","blue","teacher"], ans:0,
+  hint:"Busca una palabra que sea algo que puedes comer.", removeHint:"Se ha eliminado una opción incorrecta."},
+ {emoji:"🐶", title:"Pet Park", skill:"Habilidad: Writing", type:"text",
+  q:"Escribe en inglés: “Yo tengo un perro”.", ansText:"I have a dog",
+  hint:"Empieza con “I have…”.", removeHint:"Ayuda extra: la estructura es I + have + a + animal."},
+ {emoji:"🌳", title:"City Park", skill:"Habilidad: Listening", type:"mc",
+  q:"Escucha/lee: “The boy is running in the park.” Who is running?", opts:["The boy","The girl","The teacher","The dog"], ans:0,
+  hint:"Busca quién está haciendo la acción: “running”.", removeHint:"Se ha eliminado una opción incorrecta."},
+ {emoji:"🍕", title:"Restaurant", skill:"Habilidad: Speaking", type:"speak",
+  q:"Lee y repite en voz alta: “Hello! Can I have a pizza, please?”",
+  hint:"“Can I have…?” se usa para pedir algo de manera amable.", removeHint:"Ayuda extra: repite por partes: Hello! / Can I have a pizza / please?"},
+ {emoji:"🚌", title:"Bus Station", skill:"Habilidad: Writing", type:"order",
+  q:"Ordena las palabras para formar una oración correcta.", words:["I","like","music"], ansOrder:["I","like","music"],
+  hint:"La oración empieza con “I”.", removeHint:"Ayuda extra: la primera palabra correcta es “I”."},
+ {emoji:"🎡", title:"Fun Fair", skill:"Habilidades: Reading + Speaking", type:"mc",
+  q:"Someone asks: “What is your name?” What can you answer?", opts:["My name is Ana.","I am ten blue.","I like school.","Good night."], ans:0,
+  hint:"La respuesta debe decir un nombre.", removeHint:"Se ha eliminado una opción incorrecta."},
+ {emoji:"🔎", title:"Mystery City", skill:"Habilidades: Reading + Listening", type:"mc",
+  q:"Escucha/lee: “The cat is under the table.” Where is the cat?", opts:["Under the table","On the chair","In the school","Behind the door"], ans:0,
+  hint:"La palabra “under” indica que algo está debajo.", removeHint:"Se ha eliminado una opción incorrecta."},
+ {emoji:"🏰", title:"Magic Castle", skill:"Habilidades: Reading + Writing + Speaking", type:"final",
+  q:"Reto final: escribe una presentación corta en inglés.",
+  hint:"Puedes empezar con “My name is…” y agregar tu edad y algo que te guste.",
+  removeHint:"Ayuda extra: usa esta estructura: My name is ___ . I am ___ years old. I like ___."}
+];
+
+let current=0, score=0, usedHint=false, usedRemove=false, answered=false, selectedWords=[];
+
+function startGame(){
+  document.getElementById("start").classList.add("hidden");
+  document.getElementById("finish").classList.add("hidden");
+  document.getElementById("game").classList.remove("hidden");
+  current=0; score=0; renderLevels(); render();
+}
+function restart(){ startGame(); }
+
+function renderLevels(){
+  const box=document.getElementById("levels");
+  box.innerHTML="";
+  levels.forEach((_,i)=>{
+    const d=document.createElement("div");
+    d.className="level "+(i<current?"done":i===current?"current":"locked");
+    d.textContent="Nivel "+(i+1);
+    box.appendChild(d);
+  });
+}
+
+function render(){
+  const l=levels[current];
+  usedHint=false; usedRemove=false; answered=false; selectedWords=[];
+  document.getElementById("levelNum").textContent=current+1;
+  document.getElementById("score").textContent=score;
+  document.getElementById("bar").style.width=((current)/10*100)+"%";
+  document.getElementById("placeEmoji").textContent=l.emoji;
+  document.getElementById("levelTitle").textContent=`Nivel ${current+1}: ${l.title}`;
+  document.getElementById("skill").textContent=l.skill;
+  document.getElementById("question").textContent=l.q;
+  document.getElementById("feedback").className="feedback hidden";
+  document.getElementById("nextArea").classList.add("hidden");
+  document.getElementById("hintBtn").classList.remove("used");
+  document.getElementById("removeBtn").classList.remove("used");
+  document.getElementById("hintBtn").disabled=false;
+  document.getElementById("removeBtn").disabled=false;
+  buildTask(l);
+  renderLevels();
+}
+
+function buildTask(l){
+  const task=document.getElementById("task"); task.innerHTML="";
+  if(l.type==="mc"){
+    // Mezclar las opciones para que la respuesta correcta no quede siempre en la primera posición.
+    const options = l.opts.map((opt,i)=>({text:opt, correct:i===l.ans}));
+    options.sort(()=>Math.random()-0.5);
+    options.forEach(item=>{
+      const b=document.createElement("button");
+      b.className="option";
+      b.textContent=item.text;
+      b.dataset.correct=item.correct ? "true" : "false";
+      b.onclick=()=>checkMC(b);
+      task.appendChild(b);
+    });
+  } else if(l.type==="text"){
+    const input=document.createElement("input");
+    input.id="textAnswer"; input.className="textinput"; input.placeholder="Escribe tu respuesta en inglés";
+    const b=document.createElement("button"); b.className="primary"; b.textContent="✅ Comprobar respuesta"; b.onclick=()=>checkText(input.value);
+    task.appendChild(input); task.appendChild(b);
+  } else if(l.type==="speak"){
+    const p=document.createElement("p"); p.className="instruction"; p.textContent="🎙️ Repite la frase en voz alta. Cuando termines, pulsa el botón.";
+    const b=document.createElement("button"); b.className="primary"; b.textContent="🗣️ Ya lo repetí"; b.onclick=()=>speakDone();
+    task.appendChild(p); task.appendChild(b);
+  } else if(l.type==="order"){
+    const area=document.createElement("div"); area.id="selectedWords"; area.className="selected-words"; area.textContent="Selecciona las palabras en el orden correcto.";
+    const bank=document.createElement("div"); bank.className="wordbank";
+    [...l.words].sort(()=>Math.random()-.5).forEach(word=>{
+      const b=document.createElement("button"); b.className="word"; b.textContent=word;
+      b.onclick=()=>chooseWord(word,b);
+      bank.appendChild(b);
+    });
+    const check=document.createElement("button"); check.className="primary"; check.textContent="✅ Comprobar orden"; check.onclick=checkOrder;
+    task.appendChild(area); task.appendChild(bank); task.appendChild(check);
+  } else if(l.type==="final"){
+    const ta=document.createElement("textarea"); ta.id="finalAnswer"; ta.className="textinput"; ta.rows=5;
+    ta.placeholder="My name is...\\nI am ... years old.\\nI like ...";
+    const b=document.createElement("button"); b.className="primary"; b.textContent="🏆 Enviar reto final"; b.onclick=checkFinal;
+    task.appendChild(ta); task.appendChild(b);
+  }
+}
+
+function showFeedback(msg,type){
+  const f=document.getElementById("feedback");
+  f.className="feedback "+type; f.textContent=msg;
+}
+
+function success(){
+  if(answered)return;
+  answered=true; score+=10; document.getElementById("score").textContent=score;
+  showFeedback("🎉 ¡Excelente! Respuesta correcta. Ganaste 10 puntos y desbloqueaste el siguiente nivel.","ok");
+  document.querySelectorAll("#task button").forEach(b=>b.disabled=true);
+  document.getElementById("nextArea").classList.remove("hidden");
+  document.getElementById("bar").style.width=((current+1)/10*100)+"%";
+}
+function fail(extra=""){
+  showFeedback("❌ No es correcto todavía. No ganas puntos en este intento. ¡Puedes volver a intentarlo! "+extra,"no");
+}
+function checkMC(b){
+  if(answered)return;
+  if(b.dataset.correct==="true"){b.classList.add("correct");success();}
+  else {b.classList.add("wrong");fail();}
+}
+function normalize(s){return s.toLowerCase().trim().replace(/[.!?¿¡]/g,"").replace(/\s+/g," ");}
+function checkText(value){
+  if(normalize(value)===normalize(levels[current].ansText)) success();
+  else fail("Revisa el orden de las palabras y vuelve a intentarlo.");
+}
+function speakDone(){success();}
+function chooseWord(word,b){
+  if(answered)return;
+  selectedWords.push(word); b.disabled=true;
+  document.getElementById("selectedWords").textContent=selectedWords.join("  ");
+}
+function checkOrder(){
+  const ans=levels[current].ansOrder;
+  if(JSON.stringify(selectedWords)===JSON.stringify(ans)) success();
+  else {fail("Puedes volver a seleccionar las palabras."); selectedWords=[]; buildTask(levels[current]);}
+}
+function checkFinal(){
+  const v=document.getElementById("finalAnswer").value.trim();
+  const n=normalize(v);
+  const good=n.includes("my name is") && n.includes("i am") && n.includes("years old") && n.includes("i like");
+  if(good) success(); else fail("Tu presentación debe incluir: nombre, edad y algo que te guste.");
+}
+
+function useHint(){
+  if(usedHint||answered)return;
+  usedHint=true;
+  document.getElementById("hintBtn").classList.add("used"); document.getElementById("hintBtn").disabled=true;
+  showFeedback("🃏 PISTA: "+levels[current].hint,"hint");
+}
+function useRemove(){
+  if(usedRemove||answered)return;
+  usedRemove=true;
+  document.getElementById("removeBtn").classList.add("used"); document.getElementById("removeBtn").disabled=true;
+  const l=levels[current];
+  if(l.type==="mc"){
+    const buttons=[...document.querySelectorAll("#task .option")];
+    const wrong=buttons.filter((_,i)=>i!==l.ans && !buttons[i].disabled);
+    if(wrong.length){const chosen=wrong[Math.floor(Math.random()*wrong.length)]; chosen.disabled=true; chosen.style.opacity=".35"; chosen.style.textDecoration="line-through";}
+  } else if(l.type==="text"){
+    const input=document.getElementById("textAnswer");
+    input.value="I have a ";
+    input.focus();
+  } else if(l.type==="speak"){
+    showFeedback("✂️ AYUDA EXTRA: repite por partes: “Hello!” / “Can I have a pizza” / “please?”","hint");
+    return;
+  } else if(l.type==="order"){
+    selectedWords=[]; buildTask(l);
+    showFeedback("✂️ AYUDA EXTRA: la primera palabra correcta es “I”.","hint");
+    return;
+  } else if(l.type==="final"){
+    const ta=document.getElementById("finalAnswer");
+    ta.value="My name is ___ . I am ___ years old. I like ___ .";
+    ta.focus();
+  }
+  showFeedback("✂️ COMODÍN 2: "+l.removeHint,"hint");
+}
+
+function nextLevel(){
+  if(current<9){current++;render();}
+  else{
+    document.getElementById("game").classList.add("hidden");
+    document.getElementById("finish").classList.remove("hidden");
+    document.getElementById("finalScore").textContent=score;
+    document.getElementById("finalMessage").textContent=
+      score===100 ? "🌟 ¡Perfecto! Completaste toda la aventura con 100 puntos." :
+      "🎉 ¡Muy bien! Terminaste los 10 niveles. Recuerda que aprender inglés es una aventura.";
+  }
+}
+</script>
+</body>
+</html>
